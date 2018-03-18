@@ -31,7 +31,7 @@ function func_post() {
     local PASTE="$1"
     if [ -z "${PASTE}" ]
     then
-        local PASTE="#!/usr/bin/awk -F"
+        local PASTE="import this"
         echo -e "${WARNING_SETTINGS} Текст не задан. Значение по умолчанию: \"${PASTE}\". ${DEFAULT_SETTINGS}"
     fi
 
