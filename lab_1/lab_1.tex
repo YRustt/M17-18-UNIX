@@ -1,0 +1,65 @@
+\documentclass[12pt]{article}
+\usepackage[left=2cm,right=2cm,
+    top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
+
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+
+\usepackage{listings}
+
+
+\begin{document}
+\section{Matryoshka}
+\subsection{}
+\begin{lstlisting}[language=bash, frame=single]
+[yrustt]$ dd if=/dev/zero of=myfs bs=512M count=1
+[yrustt]$ mke2fs myfs -t ext2 -E nodiscard
+[yrustt]$ cd
+[yrustt]$ mkdir myfsdir
+[yrustt]$ sudo mount Desktop/myfs myfsdir/ -t ext2 -o loop
+[yrustt]$ sudo chown yrustt:yrustt myfsdir/ -R
+\end{lstlisting}
+	
+При помощи команды \textbf{dd} создаём файлик \textquotedblleft myfs\textquotedblright\ заполненный символами 0x00. Затем при помощи утилиты \textbf{mke2fs} создаём в этом месте жёсткого диска файловую систему типа \textit{ext2} (second extended filesystem). При помощи команды \textbf{mount} монтируем нашу файловую систему в директорию \textquotedblleft /myfsdir\textquotedblright. 
+	
+При указании \textquotedblleft -o loop\textquotedblright\ файл можно использовать как блочное устройство. По-моему, это было бы равносильно:
+\begin{lstlisting}[language=bash, frame=single]
+[yrustt]$ sudo losetup /dev/loop[idx from 0 to 7] myfs
+[yrustt]$ sudo mount /dev/loop[idx] myfsdir/ -t ext2
+\end{lstlisting}
+
+При указании \textquotedblleft -E nodiscard\textquotedblright\ запрещается отбрасывать блоки. Укажем этот флаг, чтобы увидеть разницу между $1.1$ и $1.2$.
+
+Дальше создадим в нашей файловой системе несколько файлов и папок.
+\begin{lstlisting}[language=bash, frame=single]
+[yrustt]$ cd myfsdir
+[yrustt]$ touch file
+[yrustt]$ mkdir dir
+[yrustt]$ touch dir/file2
+\end{lstlisting}
+\begin{lstlisting}[language=bash, frame=single]
+[yrustt]$ mount | grep myfs
+/home/yrustt/Desktop/myfs on /home/yrustt/myfsdir type ext2 
+(rw,relatime,block_validity,barrier,user_xattr,acl)
+[yrustt]$ losetup | grep myfs
+/dev/loop6         0      0         1  0 /home/yrustt/Desktop/myfs
+\end{lstlisting}
+\newpage
+\subsection{}
+\begin{lstlisting}[language=bash, frame=single]
+[yrustt]$ dd if=/dev/zero of=myfs2 bs=1 seek=512M count=0
+\end{lstlisting}
+Аналогично.
+\subsection{}
+\begin{lstlisting}[language=bash, frame=single]
+[yrustt]$ du -h myfs
+513M	myfs
+[yrustt]$ du -h --apparent-size myfs
+512M	myfs
+[yrustt]$ du -h myfs2
+8,3M	myfs2
+[yrustt]$ du -h --apparent-size myfs2
+513M	myfs2
+\end{lstlisting}
+Не совсем понимаю почему где-то $513$ мегабайт получилось, но в целом разница видна.
+\end{document}
