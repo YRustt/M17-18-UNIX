@@ -14,13 +14,32 @@ DEFAULT_SETTINGS="\033[0m"
 URL="http://paste.ee/api"
 
 
-function func_get_language() {
-    DATA="$1"
-    if [ -f "${DATA}" ]
-    then
-        local FILE_EXT=`echo "${DATA}" | awk -F. '{print $NF}'`
-        DATA=`cat ${DATA}`
-    fi
+function func_get_language_by_shebang() {
+    LANGUAGE=
+}
+
+
+function func_get_language_by_ext() {
+    declare -A MAP_EXTS=(["cpp"]="cpp"
+                         ["c"]="cpp"
+                         ["py"]="python"
+                         ["awk"]="awk"
+                         ["go"]="go"
+                         ["html"]="xml"
+                         ["xhtml"]="xml"
+                         ["xml"]="xml"
+                         ["css"]="css"
+                         ["pl"]="perl"
+                         ["pm"]="perl"
+                         ["rb"]="ruby"
+                         ["rs"]="rust"
+                         ["sql"]="sql"
+                         ["txt"]="text"
+                         ["yml"]="yaml"
+                         ["yaml"]="yaml"
+                         ["YAML"]="yaml")
+    local FILE_EXT=`echo "$1" | awk -F. '{print $NF}'`
+    LANGUAGE="${MAP_EXTS[${FILE_EXT}]}"
 }
 
 
@@ -67,19 +86,32 @@ function func_open() {
 }
 
 
-function func_pipeline() {
-    func_get_language "$1"
-    func_post "${DATA}"
-    func_open ${POST_RESULT}
-}
-
-
 if [ $# -eq 0 ]
 then
-    func_pipeline
-elif [ $# -eq 1 ]
-then
-    func_pipeline $1
+    PASTE=`cat`
+    func_get_language_by_shebang "${PASTE}"
+    func_post "${PASTE}" "${LANGUAGE}"
+    func_open "${POST_RESULT}"
 else
-    echo "1"
+    for FILENAME in "$@"
+    do
+        if [ -f "${FILENAME}" ]
+        then
+            PASTE=`cat ${FILENAME}`
+            LANGUAGE=
+
+            func_get_language_by_ext "${FILENAME}"
+            if [ -z "${LANGUAGE}" ]
+            then
+                func_get_language_by_shebang "${PASTE}"
+            fi
+            func_post "${PASTE}" "${LANGUAGE}"
+            func_open "${POST_RESULT}"
+        else
+            echo -e "${ERROR_SETTINGS} Файл \"${FILENAME}\" не найден. ${DEFAULT_SETTINGS}"
+        fi
+        echo ---
+    done
 fi
+
+echo -e "${GOOD_SETTINGS} Добби свободен. ${DEFAULT_SETTINGS}"
