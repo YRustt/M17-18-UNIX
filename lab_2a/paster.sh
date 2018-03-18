@@ -4,40 +4,55 @@ GREEN_BACKGROUND="\033[42m"
 RED_BACKGROUND="\033[41m"
 YELLOW_BACKGROUND="\033[43m"
 WHITE_FONT_COLOR="\033[30m"
+BOLD_FONT="\033[1m"
 
 GOOD_SETTINGS="${GREEN_BACKGROUND}${WHITE_FONT_COLOR}"
 WARNING_SETTINGS="${YELLOW_BACKGROUND}${WHITE_FONT_COLOR}"
 ERROR_SETTINGS="${RED_BACKGROUND}${WHITE_FONT_COLOR}"
 DEFAULT_SETTINGS="\033[0m"
 
+declare -A MAP_APPS=(["python"]="python"
+                     ["awk"]="awk"
+                     ["perl"]="perl")
+
+declare -A MAP_EXTS=(["cpp"]="cpp"
+                     ["c"]="cpp"
+                     ["py"]="python"
+                     ["awk"]="awk"
+                     ["go"]="go"
+                     ["html"]="xml"
+                     ["xhtml"]="xml"
+                     ["xml"]="xml"
+                     ["css"]="css"
+                     ["pl"]="perl"
+                     ["pm"]="perl"
+                     ["rb"]="ruby"
+                     ["rs"]="rust"
+                     ["sql"]="sql"
+                     ["txt"]="text"
+                     ["yml"]="yaml"
+                     ["yaml"]="yaml"
+                     ["YAML"]="yaml")
 
 URL="http://paste.ee/api"
 
 
+function display_usage() {
+    echo -e "${BOLD_FONT}2A.11${DEFAULT_SETTINGS}"
+    echo "1. ./paster.sh file1 file2 ... fileN"
+    echo "2. cat file | ./parser.sh"
+}
+
 function func_get_language_by_shebang() {
-    LANGUAGE=
+    local LAST_TOKEN=`echo "$1" | head -1 | awk -F/ '{print $NF}'`
+    local VERSION=`echo ${LAST_TOKEN} | awk '{ for(i=NF; i >= 1; i--) { if(!($i ~ /^-/)) { print $i; break; } } }'`
+    local APP=`echo ${VERSION} | awk 'match($0, /[A-Za-z_]+/) { print substr($0, RSTART, RLENGTH) }'`
+
+    LANGUAGE="${MAP_APPS[${APP}]}"
 }
 
 
 function func_get_language_by_ext() {
-    declare -A MAP_EXTS=(["cpp"]="cpp"
-                         ["c"]="cpp"
-                         ["py"]="python"
-                         ["awk"]="awk"
-                         ["go"]="go"
-                         ["html"]="xml"
-                         ["xhtml"]="xml"
-                         ["xml"]="xml"
-                         ["css"]="css"
-                         ["pl"]="perl"
-                         ["pm"]="perl"
-                         ["rb"]="ruby"
-                         ["rs"]="rust"
-                         ["sql"]="sql"
-                         ["txt"]="text"
-                         ["yml"]="yaml"
-                         ["yaml"]="yaml"
-                         ["YAML"]="yaml")
     local FILE_EXT=`echo "$1" | awk -F. '{print $NF}'`
     LANGUAGE="${MAP_EXTS[${FILE_EXT}]}"
 }
@@ -86,6 +101,12 @@ function func_open() {
 }
 
 
+if [[ ($@ == "--help") || ($@ == "-h") ]]
+then
+    display_usage
+    exit 0
+fi
+
 if [ $# -eq 0 ]
 then
     PASTE=`cat`
@@ -114,4 +135,4 @@ else
     done
 fi
 
-echo -e "${GOOD_SETTINGS} Добби свободен. ${DEFAULT_SETTINGS}"
+echo -e "${GOOD_SETTINGS} Done. ${DEFAULT_SETTINGS}"
