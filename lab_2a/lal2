@@ -15,10 +15,7 @@ declare -A MAP_APPS=(["python"]="python"
                      ["awk"]="awk"
                      ["perl"]="perl")
 
-declare -A MAP_EXTS=(["bash"]="bash"
-                     ["sh"]="bash"
-                     ["zsh"]="bash"
-                     ["cpp"]="cpp"
+declare -A MAP_EXTS=(["cpp"]="cpp"
                      ["c"]="cpp"
                      ["py"]="python"
                      ["awk"]="awk"
@@ -81,10 +78,7 @@ function func_post() {
 
     POST_RESULT=$(curl ${URL} \
                   -X "POST" \
-                  --data "key=${KEY}" \
-                  --data "expire=${EXPIRE}" \
-                  --data-urlencode "paste=${PASTE}" \
-                  --data "language=${LANGUAGE}" 2>/dev/null | \
+                  --data "key=${KEY}&expire=${EXPIRE}&paste=${PASTE}&language=${LANGUAGE}" 2>/dev/null | \
                   python3 -c "import sys, json; sys.stdout.write(json.load(sys.stdin)['paste']['link']);" 2>/dev/null)
     if [ -n "${POST_RESULT}" ]
     then
