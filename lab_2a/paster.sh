@@ -13,7 +13,10 @@ DEFAULT_SETTINGS="\033[0m"
 
 declare -A MAP_APPS=(["python"]="python"
                      ["awk"]="awk"
-                     ["perl"]="perl")
+                     ["perl"]="perl"
+                     ["bash"]="bash"
+                     ["sh"]="sh"
+                     ["zsh"]="zsh")
 
 declare -A MAP_EXTS=(["bash"]="bash"
                      ["sh"]="bash"
