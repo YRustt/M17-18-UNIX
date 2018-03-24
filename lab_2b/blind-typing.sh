@@ -14,7 +14,7 @@ DEFAULT_SETTINGS="\033[0m"
 
 
 REPEAT_STRING="?"
-COUNT_CORRECT_ANSWERS=0
+COUNT_WRONG_ANSWERS=0
 COUNT_ALL_ANSWERS=0
 
 
@@ -22,12 +22,12 @@ function exit_ {
     local PERCENT=100
     if [ ${COUNT_ALL_ANSWERS} -ne 0 ]
     then
-        local PERCENT=$(( ${COUNT_CORRECT_ANSWERS} / ${COUNT_ALL_ANSWERS} * 100 ))
+        local PERCENT=$(( ${COUNT_WRONG_ANSWERS} / ${COUNT_ALL_ANSWERS} * 100 ))
     fi
 
-    local EXIT_PHRASE="${GOOD_SETTINGS} Number of correct answers: ${COUNT_CORRECT_ANSWERS}\n
+    local EXIT_PHRASE="${GOOD_SETTINGS} Number of wrong answers: ${COUNT_WRONG_ANSWERS}\n
         Number of all answers: ${COUNT_ALL_ANSWERS}\n
-        Percentage of correct answers: ${PERCENT}${DEFAULT_SETTINGS}"
+        Percentage of wrong answers: ${PERCENT}${DEFAULT_SETTINGS}"
     echo -e ${EXIT_PHRASE}
 
     exit 0
@@ -64,7 +64,19 @@ function get_random_line {
 
 
 function compare_lines {
-    return 1
+    local REGEX="s/[^[:alpha:]]//g;s/[[:alpha:]]/\L&/g"
+    local LINE1=`echo $1 | sed ${REGEX}`
+    local LINE2=`echo $2 | sed ${REGEX}`
+
+
+    (( COUNT_ALL_ANSWERS++ ))
+    if [ ${LINE1} = ${LINE2} ]
+    then
+        (( COUNT_CORRECT_ANSWERS++ ))
+        return 0
+    else
+        return 1
+    fi
 }
 
 
@@ -88,17 +100,17 @@ do
         if [ -z "${USER_LINE}" ]
         then
             exit_
-        elif [ ${USER_LINE} = ${REPEAT_STRING} ]
+        elif [ "${USER_LINE}" = "${REPEAT_STRING}" ]
         then
             say_line "${RANDOM_LINE}"
             continue
         fi
 
-        if compare_lines ${USER_LINE} ${RANDOM_LINE}
+        if compare_lines "${USER_LINE}" "${RANDOM_LINE}"
         then
             break
         else
-            echo "Expected: \"${RANDOM_LINE}\" and Typed: \"${USER_LINE}\""
+            echo -e "${ERROR_SETTINGS} Expected: \"${RANDOM_LINE}\" and Typed: \"${USER_LINE}\" ${DEFAULT_SETTINGS}"
         fi
     done < /dev/stdin
 done
