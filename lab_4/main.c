@@ -6,8 +6,8 @@
 void *my_thread_function(void *args) {
     const char *c=(const char *)args;
     while (true) {
-        printf("%s", c);
-//        write(STDOUT_FILENO, c, 1);
+//        printf("%s", c);
+        write(STDOUT_FILENO, c, 1);
     }
     return NULL;
 }

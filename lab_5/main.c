@@ -15,13 +15,17 @@ struct TContext {
 void* ThreadFunc(void* arg) {
     struct TContext* ctxt = arg;
     int* counter = ctxt->Counter;
+    int flag = 1;
     fprintf(stderr, "This is %s thread\n", ctxt->Name);
-    while (*counter < MAX) {
-        if (*counter % 2 == ctxt->Mod) {
-            pthread_mutex_lock(&lock);
+    while (flag) {
+        pthread_mutex_lock(&lock);
+        if ((*counter < MAX) && (*counter % 2 == ctxt->Mod)) {
             printf("%d ", (*counter)++);
-            pthread_mutex_unlock(&lock);
         }
+        if (*counter == MAX) {
+            flag = 0;
+        }
+        pthread_mutex_unlock(&lock);
     }
     pthread_exit(0);
 }
