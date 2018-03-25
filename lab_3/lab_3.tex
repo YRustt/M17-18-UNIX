@@ -9,8 +9,10 @@
 \begin{document}
 \section{Код}
 \begin{lstlisting}[language=C,frame=single,numbers=left]
+#include <stdio.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <time.h>
 
 #define N 1000
 #define M 100000000
@@ -23,6 +25,7 @@ int main() {
         ar[i] = i;                # or not
     }                             # or not
 
+    clock_t start_time = clock();
     for (int i = 0; i < N; ++i) {
         pid_t pid = fork(); # or vfork
         if (pid) {
@@ -32,6 +35,8 @@ int main() {
             execlp("/bin/true", "/bin/true", NULL, NULL);
         }
     }
+    clock_t end_time = clock();
+    printf("%f\n", (float)(end_time - start_time) / CLOCKS_PER_SEC);
     return 0;
 }
 \end{lstlisting}
@@ -40,16 +45,16 @@ gcc main.c
 \end{lstlisting}
 \section{Выводы}
 \begin{lstlisting}[language=bash]
-time ./a.out
+./a.out
 \end{lstlisting}
 \begin{center}
   \begin{tabular}{ | l | c | r | }
     \hline
      & fork & vfork \\ \hline
-    без массива & 0.433 & 0.358 \\ \hline
-    с массивом & 15.056 & 0.814 \\
+    без массива & 0.065288 & 0.032956 \\ \hline
+    с массивом & 6.286745 & 0.033586 \\
     \hline
   \end{tabular}
 \end{center}
-Время указано в секундах. Если учитывать время на создание и инициализацию массива, то время работы при использовании vfork почти не изменилось. А при использовании fork, время выполнения заметно возрасло.
+Время указано в секундах на 1000 запросов. Без использования большого количества памяти, использование vfork уменьшает время работы примерно в два раза. В случае "тяжёлых" процессов время работы с использованием vfork не изменяется, а с использованием fork - ухудшается примерно в 100 раз.
 \end{document}
