@@ -1,0 +1,48 @@
+\documentclass[12pt]{article}
+\usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+
+\usepackage{listings}
+
+\begin{document}
+\section{Код}
+\begin{lstlisting}[language=C,numbers=left,frame=single]
+#include <stdio.h>
+#include <stdbool.h>
+#include <unistd.h>
+#include <pthread.h>
+
+
+void *my_thread_function(void *args) {
+    const char *c=(const char *)args;
+    while (true) {
+        write(STDOUT_FILENO, c, 1); # or printf("%s", c);
+    }
+    return NULL;
+}
+
+
+int main() {
+    pthread_t tid_1, tid_2;
+
+    pthread_create(&tid_1, NULL, my_thread_function, (void *)"a");
+    pthread_create(&tid_2, NULL, my_thread_function, (void *)"b");
+    sleep(1);
+
+    return 0;
+}
+\end{lstlisting}
+\begin{lstlisting}[language=bash]
+gcc main.c -pthread
+\end{lstlisting}
+\section{Вывод}
+\textbf{write} - функция предоставляемя ядром ОС, позволяет записать массив байт в какой-нибудь файл по файловому дискриптеру. STDOUT\_FILENO=1 - дескриптор стандартного потока вывода.
+\newline
+Вывод: \dots ababab\dots
+\newline
+\newline
+\textbf{printf} - "print formated". Использует буфер. Когда буфер переполняется, имхо, вызывается write. Более быстрая, чем write, ибо не приходится каждый раз делать syscall.
+\newline
+Вывод: \dots aaa\dots aaa\dots abbb\dots bbb\dots aaa\dots
+\end{document}
