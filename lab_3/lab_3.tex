@@ -1,0 +1,55 @@
+\documentclass[12pt]{article}
+\usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}
+
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+
+\usepackage{listings}
+
+\begin{document}
+\section{Код}
+\begin{lstlisting}[language=C,frame=single,numbers=left]
+#include <unistd.h>
+#include <sys/wait.h>
+
+#define N 1000
+#define M 100000000
+
+
+int ar[M]; # or not
+
+int main() {
+    for (int i = 0; i < M; ++i) { # or not
+        ar[i] = i;                # or not
+    }                             # or not
+
+    for (int i = 0; i < N; ++i) {
+        pid_t pid = fork(); # or vfork
+        if (pid) {
+            int status;
+            waitpid(pid, &status, 0);
+        } else {
+            execlp("/bin/true", "/bin/true", NULL, NULL);
+        }
+    }
+    return 0;
+}
+\end{lstlisting}
+\begin{lstlisting}[language=bash]
+gcc main.c
+\end{lstlisting}
+\section{Выводы}
+\begin{lstlisting}[language=bash]
+time ./a.out
+\end{lstlisting}
+\begin{center}
+  \begin{tabular}{ | l | c | r | }
+    \hline
+     & fork & vfork \\ \hline
+    без массива & 0.433 & 0.358 \\ \hline
+    с массивом & 15.056 & 0.814 \\
+    \hline
+  \end{tabular}
+\end{center}
+Время указано в секундах. Если учитывать время на создание и инициализацию массива, то время работы при использовании vfork почти не изменилось. А при использовании fork, время выполнения заметно возрасло.
+\end{document}
