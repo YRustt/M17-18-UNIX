@@ -21,7 +21,12 @@ COUNT_ALL_ANSWERS=0
 
 
 function exit_ {
-    local PERCENT=100
+    if [ -n "${OLD_IFS}" ]
+    then
+        IFS=${OLD_IFS}
+    fi
+
+    local PERCENT=0
     if [ ${COUNT_ALL_ANSWERS} -ne 0 ]
     then
         local PERCENT=`echo "scale=2; ${COUNT_WRONG_ANSWERS} / ${COUNT_ALL_ANSWERS} * 100" | bc`
@@ -50,7 +55,9 @@ function welcome {
 
 
 function download {
-    echo "download"
+    # http://1001truisms.webs.com/truisms.htm
+    local URL="https://paste.ee/d/53y85/0"
+    curl ${URL} -o "$1" 2>/dev/null
 }
 
 
@@ -66,12 +73,12 @@ function get_random_line {
 
 
 function compare_lines {
-    local REGEX="s/[^[:alpha:]]//g;s/[[:alpha:]]/\L&/g"
+    local REGEX="s/[[:space:]]\+/ /g;s/[[:alpha:]]/\L&/g;s/[^[:alpha:][:space:]]//g"
     local LINE1=`echo $1 | sed ${REGEX}`
     local LINE2=`echo $2 | sed ${REGEX}`
 
     (( COUNT_ALL_ANSWERS++ ))
-    if [ ${LINE1} = ${LINE2} ]
+    if [ "${LINE1}" = "${LINE2}" ]
     then
         return 0
     else
@@ -82,11 +89,14 @@ function compare_lines {
 
 
 welcome
+OLD_IFS=${IFS}
+IFS=''
 
 FILE="phrases.txt"
 if ! [[ -s ${FILE} ]]
 then
-    download
+    echo -e "${WARNING_SETTINGS} The file doesn't exists. Loading. ${DEFAULT_SETTINGS}"
+    download "${FILE}"
 fi
 read_file ${FILE}
 
@@ -96,8 +106,25 @@ do
     get_random_line
     say_line "${RANDOM_LINE}"
 
-    while read -s USER_LINE
+    while true
     do
+        USER_LINE=""
+        while read -sn1 USER_SYMBOL
+        do
+            if [ "${USER_SYMBOL}" = "" ]
+            then
+                break
+            fi
+
+            if [ "${USER_SYMBOL}" = $'\x7f' ]
+            then
+                say_line "Backspace is ignored"
+                continue
+            fi
+
+            USER_LINE="${USER_LINE}${USER_SYMBOL}"
+        done < /dev/stdin
+
         if [ -z "${USER_LINE}" ]
         then
             exit_
@@ -106,16 +133,16 @@ do
             say_line "${RANDOM_LINE}"
             continue
         fi
-
-        if compare_lines "${USER_LINE}" "${RANDOM_LINE}"
-        then
-            say_line "${CORRECT_ANSWER_STRING}"
-        else
-            ERROR_STRING="Expected: \"${RANDOM_LINE}\" and Typed: \"${USER_LINE}\""
-            echo -e "${ERROR_SETTINGS} ${ERROR_STRING} ${DEFAULT_SETTINGS}"
-            echo ${ERROR_STRING} >> errors.log &
-            say_line "${WRONG_ANSWER_STRING}"
-        fi
         break
-    done < /dev/stdin
+    done
+
+    if compare_lines "${USER_LINE}" "${RANDOM_LINE}"
+    then
+        say_line "${CORRECT_ANSWER_STRING}"
+    else
+        ERROR_STRING="Expected: \"${RANDOM_LINE}\" and Typed: \"${USER_LINE}\""
+        echo -e "${ERROR_SETTINGS} ${ERROR_STRING} ${DEFAULT_SETTINGS}"
+        echo ${ERROR_STRING} >> errors.log &
+        say_line "${WRONG_ANSWER_STRING}"
+    fi
 done
