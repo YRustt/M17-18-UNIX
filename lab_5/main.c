@@ -4,7 +4,8 @@
 
 #define MAX 100
 
-pthread_mutex_t lock;
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
 struct TContext {
     const char* Name;
@@ -15,15 +16,14 @@ struct TContext {
 void* ThreadFunc(void* arg) {
     struct TContext* ctxt = arg;
     int* counter = ctxt->Counter;
-    int flag = 1;
     fprintf(stderr, "This is %s thread\n", ctxt->Name);
-    while (flag) {
+    while (*counter < MAX) {
         pthread_mutex_lock(&lock);
-        if ((*counter < MAX) && (*counter % 2 == ctxt->Mod)) {
+        if (*counter % 2 == ctxt->Mod) {
             printf("%d ", (*counter)++);
-        }
-        if (*counter == MAX) {
-            flag = 0;
+            pthread_cond_signal(&cond);
+        } else {
+            pthread_cond_wait(&cond, &lock);
         }
         pthread_mutex_unlock(&lock);
     }
