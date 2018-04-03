@@ -12,7 +12,9 @@ int main() {
     }
 
     char c;
-    read(STDIN_FILENO, &c, 1);
+    if (read(STDIN_FILENO, &c, 1) == -1) {
+        perror("read error");
+    }
 
     if (munmap(addr, amount) == -1) {
         perror("munmap error");
