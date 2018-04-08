@@ -127,7 +127,7 @@ else
     do
         if [ -f "${FILENAME}" ]
         then
-            PASTE=`cat ${FILENAME}`
+            PASTE=`cat "${FILENAME}"`
             LANGUAGE=
 
             func_get_language_by_ext "${FILENAME}"
