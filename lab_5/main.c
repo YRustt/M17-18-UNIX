@@ -17,8 +17,12 @@ void* ThreadFunc(void* arg) {
     struct TContext* ctxt = arg;
     int* counter = ctxt->Counter;
     fprintf(stderr, "This is %s thread\n", ctxt->Name);
-    while (*counter < MAX) {
+    while (1) {
         pthread_mutex_lock(&lock);
+        if (*counter >= MAX) {
+            pthread_mutex_unlock(&lock);
+            break;
+        }
         if (*counter % 2 == ctxt->Mod) {
             printf("%d ", (*counter)++);
             pthread_cond_signal(&cond);
